@@ -1,8 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "MovieTree.h"
 #include "MovieClass.h"
 #include <QFile>
 #include <QTextStream>
+#include <vector>
+#include <chrono>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -69,26 +72,67 @@ MainWindow::MainWindow(QWidget *parent)
     // Connect the Generate New List button to a slot
     connect(ui->Credits, &QPushButton::clicked, this, &MainWindow::onCreditsClicked);
     connect(ui->GenerateButton, &QPushButton::clicked, this, &MainWindow::onGenerateNewListClicked);
+    connect(ui->SortButton, &QPushButton::clicked, this, &MainWindow::onSortClicked);
 }
 
 void MainWindow::onGenerateNewListClicked()
 {
     ui->tableWidget->setRowCount(0);
-    // Generate the list of movies
-    vector<Movie> movies = Movie::generateRandom();
 
-    // Iterate over the movies and populate the table
+    // Generate the list of movies
+    movies = Movie::generateRandom();
+
+    // Populate the table with unsorted data
     for (const auto& movie : movies) {
         int row = ui->tableWidget->rowCount(); // Get the current number of rows
         ui->tableWidget->insertRow(row);       // Insert a new row
 
         // Populate the row with data from the Movie object
         ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(movie.getName())));
-        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(movie.getRating(), 'f', 2)));
+        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(movie.getRating(), 'f', 5)));
         ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(movie.getGenre())));
         ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(movie.getYear())));
     }
 }
+
+void MainWindow::onSortClicked()
+{
+    ui->tableWidget->setRowCount(0);
+
+    // Insert movies into the BST for sorting
+    MovieBST movieBST;
+    for (const auto& movie : movies) {
+        movieBST.insert(movie);
+    }
+
+    // Measure the time taken for traversal
+    auto start = std::chrono::high_resolution_clock::now(); // Start timer
+
+    // Get sorted movies in descending order from the BST
+    vector<Movie> sortedMovies = movieBST.getSortedMoviesDescending();
+
+    auto end = std::chrono::high_resolution_clock::now(); // End timer
+
+    // Calculate elapsed time in milliseconds
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    // Update the BSTTimeLabel with the time taken
+    QString timeText = QString("BST Time: %1 ms").arg(duration.count());
+    ui->BSTTimeLabel->setText(timeText); // Set the text on the label
+
+    // Populate the table with sorted data
+    for (const auto& movie : sortedMovies) {
+        int row = ui->tableWidget->rowCount(); // Get the current number of rows
+        ui->tableWidget->insertRow(row);       // Insert a new row
+
+        // Populate the row with data from the Movie object
+        ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(movie.getName())));
+        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(movie.getRating(), 'f', 5)));
+        ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(movie.getGenre())));
+        ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(movie.getYear())));
+    }
+}
+
 void MainWindow::onCreditsClicked()
 {
     //placeholder asf until i feel like doing ts

@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdlib>
 #include <MovieClass.h>
+#pragma once
 
 using namespace std;
 
@@ -62,4 +63,17 @@ public:
         inOrderTraversal(root, sortedMovies);
         return sortedMovies;
     }
+    void inOrderTraversalDescending(BSTNode* node, vector<Movie>& sortedMovies) const {
+        if (node == nullptr) return;
+        inOrderTraversalDescending(node->right, sortedMovies); // Traverse the right subtree first
+        sortedMovies.push_back(node->movie);                  // Visit the current node
+        inOrderTraversalDescending(node->left, sortedMovies); // Traverse the left subtree next
+    }
+
+    vector<Movie> getSortedMoviesDescending() const {
+        vector<Movie> sortedMovies;
+        inOrderTraversalDescending(root, sortedMovies);
+        return sortedMovies;
+    }
+
 };

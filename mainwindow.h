@@ -1,5 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+#pragma once
+#include "MovieClass.h"
 
 #include <QMainWindow>
 
@@ -19,8 +21,10 @@ public:
 public slots:
     void onGenerateNewListClicked();
     void onCreditsClicked();    // Declare the slot for the button click
+    void onSortClicked();
 
 private:
     Ui::MainWindow *ui;
+    std::vector<Movie> movies;
 };
 #endif // MAINWINDOW_H

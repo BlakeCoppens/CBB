@@ -14,6 +14,7 @@ SOURCES += \
 
 HEADERS += \
     MovieClass.h \
+    MovieTree.h \
     mainwindow.h
 
 FORMS += \
