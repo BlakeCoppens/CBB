@@ -94,7 +94,7 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
+        MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "Cinemas Best Benchmark", nullptr));
         SortButton->setText(QCoreApplication::translate("MainWindow", "Sort By Rating:", nullptr));
         HeadingLabel->setText(QCoreApplication::translate("MainWindow", "Cinemas Best Benchmark V1", nullptr));
         GenerateButton->setText(QCoreApplication::translate("MainWindow", "Generate New List", nullptr));

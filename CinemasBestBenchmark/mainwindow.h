@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
+#pragma once
+#include "MovieClass.h"
+#include "credits.h"
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
@@ -17,9 +19,13 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 public slots:
-    void onGenerateNewListClicked(); // Declare the slot for the button click
+    void onGenerateNewListClicked();
+    void onCreditsClicked();    // Declare the slot for the button click
+    void onSortClicked();
 
 private:
     Ui::MainWindow *ui;
+    std::vector<Movie> movies;
+    credits *creditsWindow; // Member to hold the credits window instance
 };
 #endif // MAINWINDOW_H

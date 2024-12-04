@@ -1,7 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "MovieTree.h"
+#include "MovieClass.h"
 #include <QFile>
 #include <QTextStream>
+#include <vector>
+#include <chrono>
+#include "credits.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -9,37 +14,48 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Initialize the table widget
-    ui->tableWidget->setColumnCount(5); // Five columns for Movie Title, Rating, Genre, Year, Additional Info
-    QStringList headers = {"Movie Title", "Rating", "Genre", "Year", "Additional Info"};
+    // Create the credits window and keep it hidden
+    creditsWindow = new credits(this);
+    creditsWindow->hide(); // Keep it hidden initially
+
+    // Connect the backToMain signal to hide the credits window and show the main window
+    connect(creditsWindow, &credits::backToMain, this, [=]() {
+        creditsWindow->hide(); // Hide the credits window
+        this->show();          // Show the main window
+    });
+
+    // Connect the "Credits" button to show the credits window
+    connect(ui->Credits, &QPushButton::clicked, this, &MainWindow::onCreditsClicked);
+
+    ui->tableWidget->setColumnCount(4);
+    QStringList headers = {"Movie Title", "Rating", "Genre", "Year"};
     ui->tableWidget->setHorizontalHeaderLabels(headers);
-    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers); // Make the table read-only
-    ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows); // Select entire rows
+    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    // Adjust column sizes
-    ui->tableWidget->setColumnWidth(0, 300); // Largest for Movie Title
-    ui->tableWidget->setColumnWidth(1, 100); // Rating
-    ui->tableWidget->setColumnWidth(2, 150); // Genre
-    ui->tableWidget->setColumnWidth(3, 100); // Year
-    ui->tableWidget->setColumnWidth(4, 200); // Additional Info
 
-    // Align header styles with the palette
+    ui->tableWidget->setColumnWidth(0, 500);
+    ui->tableWidget->setColumnWidth(2, 150);
+    ui->tableWidget->setColumnWidth(1, 100);
+    ui->tableWidget->setColumnWidth(3, 100);
+
+
     ui->tableWidget->horizontalHeader()->setStyleSheet(
         "QHeaderView::section {"
-        "background-color: #39594A;" // Darker background
-        "color: #E8EAE5;"           // Light text
-        "padding: 5px;"             // Padding inside the header
-        "border: none;"             // Remove borders
+        "background-color: #39594A;"
+        "color: #E8EAE5;"
+        "padding: 5px;"
+        "border: none;"
         "}"
         );
 
-    // Overall table style
+
     ui->tableWidget->verticalHeader()->setVisible(false);
     ui->tableWidget->setStyleSheet(
-        "QTableWidget { background-color: #ADB6A8; color: #2B3D35; }" // Table background and text colors
+        "QTableWidget { background-color: #ADB6A8; color: #2B3D35; }"
         );
 
-    // Define the stylesheet for the main window
+
     QString styleSheet = R"(
         QWidget {
             background-color: #2B3D35; /* Main dark green background */
@@ -64,31 +80,73 @@ MainWindow::MainWindow(QWidget *parent)
             border-radius: 5px;
         }
     )";
-    this->setStyleSheet(styleSheet); // Apply the stylesheet to the MainWindow
+    this->setStyleSheet(styleSheet);
 
-    // Connect the Generate New List button to a slot
+    connect(ui->Credits, &QPushButton::clicked, this, &MainWindow::onCreditsClicked);
     connect(ui->GenerateButton, &QPushButton::clicked, this, &MainWindow::onGenerateNewListClicked);
+    connect(ui->SortButton, &QPushButton::clicked, this, &MainWindow::onSortClicked);
 }
 
 void MainWindow::onGenerateNewListClicked()
 {
-    // Add a new row to the table
-    int row = ui->tableWidget->rowCount(); // Get the current number of rows
-    ui->tableWidget->insertRow(row); // Insert a new row
+    ui->tableWidget->setRowCount(0);
 
-    // Example movie data
-    QString movieTitle = "Movie " + QString::number(row + 1);
-    QString rating = QString::number(rand() % 10 + 1) + "/10"; // Random rating from 1-10
-    QString genre = (rand() % 2 == 0) ? "Action" : "Comedy"; // Random genre
-    QString year = QString::number(2000 + rand() % 23); // Random year between 2000 and 2022
-    QString additionalInfo = "Info " + QString::number(row + 1);
+    movies = Movie::generateRandom();
 
-    // Populate the row with data
-    ui->tableWidget->setItem(row, 0, new QTableWidgetItem(movieTitle));
-    ui->tableWidget->setItem(row, 1, new QTableWidgetItem(rating));
-    ui->tableWidget->setItem(row, 2, new QTableWidgetItem(genre));
-    ui->tableWidget->setItem(row, 3, new QTableWidgetItem(year));
-    ui->tableWidget->setItem(row, 4, new QTableWidgetItem(additionalInfo));
+
+    for (const auto& movie : movies) {
+        int row = ui->tableWidget->rowCount();
+        ui->tableWidget->insertRow(row);
+
+        ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(movie.getName())));
+        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(movie.getRating(), 'f', 5)));
+        ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(movie.getGenre())));
+        ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(movie.getYear())));
+    }
+}
+
+void MainWindow::onSortClicked()
+{
+    ui->tableWidget->setRowCount(0);
+
+    MovieBST movieBST;
+    for (const auto& movie : movies) {
+        movieBST.insert(movie);
+    }
+
+    // Measure the time taken for traversal
+    auto start = std::chrono::high_resolution_clock::now();
+
+
+    vector<Movie> sortedMovies = movieBST.getSortedMoviesDescending();
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+
+    QString timeText = QString("BST Time: %1 ms").arg(duration.count());
+    ui->BSTTimeLabel->setText(timeText);
+
+
+    for (const auto& movie : sortedMovies) {
+        int row = ui->tableWidget->rowCount();
+        ui->tableWidget->insertRow(row);
+
+        ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(movie.getName())));
+        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(movie.getRating(), 'f', 5)));
+        ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(movie.getGenre())));
+        ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(movie.getYear())));
+    }
+}
+
+
+#include "credits.h"
+
+void MainWindow::onCreditsClicked()
+{
+    creditsWindow->show();
 }
 
 MainWindow::~MainWindow()
