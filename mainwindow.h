@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 #pragma once
 #include "MovieClass.h"
-
+#include "credits.h"
 #include <QMainWindow>
 
 QT_BEGIN_NAMESPACE
@@ -20,11 +20,12 @@ public:
     ~MainWindow();
 public slots:
     void onGenerateNewListClicked();
-    void onCreditsClicked();    // Declare the slot for the button click
+    void onCreditsClicked();
     void onSortClicked();
 
 private:
     Ui::MainWindow *ui;
     std::vector<Movie> movies;
+    credits *creditsWindow;
 };
 #endif // MAINWINDOW_H

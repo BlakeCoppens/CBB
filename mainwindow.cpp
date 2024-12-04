@@ -6,6 +6,7 @@
 #include <QTextStream>
 #include <vector>
 #include <chrono>
+#include "credits.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -13,63 +14,74 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // Create the credits window and keep it hidden
+    creditsWindow = new credits(this);
+    creditsWindow->hide(); // Keep it hidden initially
+
+    // Connect the backToMain signal to hide the credits window and show the main window
+    connect(creditsWindow, &credits::backToMain, this, [=]() {
+        creditsWindow->hide(); // Hide the credits window
+        this->show();          // Show the main window
+    });
+
+    // Connect the "Credits" button to show the credits window
+    connect(ui->Credits, &QPushButton::clicked, this, &MainWindow::onCreditsClicked);
 
     ui->tableWidget->setColumnCount(4);
     QStringList headers = {"Movie Title", "Rating", "Genre", "Year"};
     ui->tableWidget->setHorizontalHeaderLabels(headers);
-    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers); // Make the table read-only
+    ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    // Adjust column sizes
+
     ui->tableWidget->setColumnWidth(0, 500);
     ui->tableWidget->setColumnWidth(2, 150);
     ui->tableWidget->setColumnWidth(1, 100);
     ui->tableWidget->setColumnWidth(3, 100);
 
-    // Align header styles with the palette
+
     ui->tableWidget->horizontalHeader()->setStyleSheet(
         "QHeaderView::section {"
-        "background-color: #39594A;" // Darker background
-        "color: #E8EAE5;"           // Light text
-        "padding: 5px;"             // Padding inside the header
-        "border: none;"             // Remove borders
+        "background-color: #39594A;"
+        "color: #E8EAE5;"
+        "padding: 5px;"
+        "border: none;"
         "}"
         );
 
-    // Overall table style
+
     ui->tableWidget->verticalHeader()->setVisible(false);
     ui->tableWidget->setStyleSheet(
         "QTableWidget { background-color: #ADB6A8; color: #2B3D35; }"
         );
 
-    // Define the stylesheet for the main window
+
     QString styleSheet = R"(
         QWidget {
-            background-color: #2B3D35; /* Main dark green background */
-            color: #E8EAE5; /* Light text color */
+            background-color: #2B3D35;
+            color: #E8EAE5;
         }
         QLabel {
-            color: #F5F5F5; /* Bright white for better readability */
-            border: none; /* Remove borders for labels */
-            background-color: #39594A; /* Slightly darker green for contrast */
-            padding: 5px; /* Add some spacing inside the label */
-            border-radius: 3px; /* Rounded corners for labels */
+            color: #F5F5F5;
+            border: none;
+            background-color: #39594A;
+            padding: 5px;
+            border-radius: 3px;
         }
         QLabel#HeadingLabel {
-            border: none; /* No border for the header label */
-            background-color: transparent; /* Transparent background for the header */
-            color: #E8EAE5; /* Light text for the header */
+            border: none;
+            background-color: transparent;
+            color: #E8EAE5;
         }
         QPushButton {
-            background-color: #39594A; /* Mid-green for buttons */
-            color: #E8EAE5; /* Light text on buttons */
-            border: 2px solid #D5DDD8; /* Border matches label text color */
+            background-color: #39594A;
+            color: #E8EAE5;
+            border: 2px solid #D5DDD8;
             border-radius: 5px;
         }
     )";
-    this->setStyleSheet(styleSheet); // Apply the stylesheet to the MainWindow
+    this->setStyleSheet(styleSheet);
 
-    // Connect the Generate New List button to a slot
     connect(ui->Credits, &QPushButton::clicked, this, &MainWindow::onCreditsClicked);
     connect(ui->GenerateButton, &QPushButton::clicked, this, &MainWindow::onGenerateNewListClicked);
     connect(ui->SortButton, &QPushButton::clicked, this, &MainWindow::onSortClicked);
@@ -79,15 +91,13 @@ void MainWindow::onGenerateNewListClicked()
 {
     ui->tableWidget->setRowCount(0);
 
-    // Generate the list of movies
     movies = Movie::generateRandom();
 
-    // Populate the table with unsorted data
-    for (const auto& movie : movies) {
-        int row = ui->tableWidget->rowCount(); // Get the current number of rows
-        ui->tableWidget->insertRow(row);       // Insert a new row
 
-        // Populate the row with data from the Movie object
+    for (const auto& movie : movies) {
+        int row = ui->tableWidget->rowCount();
+        ui->tableWidget->insertRow(row);
+
         ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(movie.getName())));
         ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(movie.getRating(), 'f', 5)));
         ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(movie.getGenre())));
@@ -99,33 +109,31 @@ void MainWindow::onSortClicked()
 {
     ui->tableWidget->setRowCount(0);
 
-    // Insert movies into the BST for sorting
     MovieBST movieBST;
     for (const auto& movie : movies) {
         movieBST.insert(movie);
     }
 
     // Measure the time taken for traversal
-    auto start = std::chrono::high_resolution_clock::now(); // Start timer
+    auto start = std::chrono::high_resolution_clock::now();
 
-    // Get sorted movies in descending order from the BST
+
     vector<Movie> sortedMovies = movieBST.getSortedMoviesDescending();
 
-    auto end = std::chrono::high_resolution_clock::now(); // End timer
+    auto end = std::chrono::high_resolution_clock::now();
 
-    // Calculate elapsed time in milliseconds
+
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-    // Update the BSTTimeLabel with the time taken
+
     QString timeText = QString("BST Time: %1 ms").arg(duration.count());
-    ui->BSTTimeLabel->setText(timeText); // Set the text on the label
+    ui->BSTTimeLabel->setText(timeText);
 
-    // Populate the table with sorted data
+
     for (const auto& movie : sortedMovies) {
-        int row = ui->tableWidget->rowCount(); // Get the current number of rows
-        ui->tableWidget->insertRow(row);       // Insert a new row
+        int row = ui->tableWidget->rowCount();
+        ui->tableWidget->insertRow(row);
 
-        // Populate the row with data from the Movie object
         ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(movie.getName())));
         ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(movie.getRating(), 'f', 5)));
         ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(movie.getGenre())));
@@ -133,10 +141,14 @@ void MainWindow::onSortClicked()
     }
 }
 
+
+#include "credits.h"
+
 void MainWindow::onCreditsClicked()
 {
-    //placeholder asf until i feel like doing ts
+    creditsWindow->show();
 }
+
 MainWindow::~MainWindow()
 {
     delete ui;
