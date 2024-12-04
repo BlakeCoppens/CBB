@@ -7,12 +7,12 @@
 #include <MovieClass.h>
 
 using namespace std;
-// max
+
 class MaxHeap {
 private:
     vector<Movie> heap;
 
-    // Helper method to heapify up
+    //heapify up method
     void heapifyUp(int index) {
         while (index > 0) {
             int parentIndex = (index - 1) / 2;
@@ -26,7 +26,7 @@ private:
         }
     }
 
-    // Helper method to heapify down
+    //heapify down method
     void heapifyDown(int index) {
         int size = heap.size();
 
@@ -53,13 +53,13 @@ private:
     }
 
 public:
-    // Insert a movie into the heap
+
     void insert(const Movie& movie) {
         heap.push_back(movie);
         heapifyUp(heap.size() - 1);
     }
 
-    // Extract the movie with the maximum rating
+    //takes out movie with the best rating
     Movie extractMax() {
         if (heap.empty()) {
             throw runtime_error("Heap is empty.");
@@ -73,12 +73,11 @@ public:
         return maxMovie;
     }
 
-    // Check if the heap is empty
     bool isEmpty() const {
         return heap.empty();
     }
 
-    // Get all movies sorted by rating (in descending order)
+    //sorts movies by ranking
     vector<Movie> getSortedMovies() {
         vector<Movie> sortedMovies;
 
