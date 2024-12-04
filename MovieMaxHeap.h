@@ -7,7 +7,7 @@
 #include <MovieClass.h>
 
 using namespace std;
-//max heap
+
 class MaxHeap {
 private:
     vector<Movie> heap;
