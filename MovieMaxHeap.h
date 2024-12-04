@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <MovieClass.h>
+#pragma once
 
 using namespace std;
 

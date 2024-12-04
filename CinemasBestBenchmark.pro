@@ -15,6 +15,7 @@ SOURCES += \
 
 HEADERS += \
     MovieClass.h \
+    MovieMaxHeap.h \
     MovieTree.h \
     credits.h \
     mainwindow.h

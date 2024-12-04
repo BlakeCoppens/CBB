@@ -7,6 +7,7 @@
 #include <vector>
 #include <chrono>
 #include "credits.h"
+#include "MovieMaxHeap.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -109,28 +110,36 @@ void MainWindow::onSortClicked()
 {
     ui->tableWidget->setRowCount(0);
 
+    // BST Sorting
     MovieBST movieBST;
     for (const auto& movie : movies) {
         movieBST.insert(movie);
     }
 
-    // Measure the time taken for traversal
-    auto start = std::chrono::high_resolution_clock::now();
+    auto bstStart = std::chrono::high_resolution_clock::now();
+    vector<Movie> sortedMoviesBST = movieBST.getSortedMoviesDescending();
+    auto bstEnd = std::chrono::high_resolution_clock::now();
 
+    auto bstDuration = std::chrono::duration_cast<std::chrono::milliseconds>(bstEnd - bstStart);
+    QString bstTimeText = QString("BST Time: %1 ms").arg(bstDuration.count());
+    ui->BSTTimeLabel->setText(bstTimeText);
 
-    vector<Movie> sortedMovies = movieBST.getSortedMoviesDescending();
+    // MaxHeap Sorting
+    MaxHeap maxHeap;
+    for (const auto& movie : movies) {
+        maxHeap.insert(movie);
+    }
 
-    auto end = std::chrono::high_resolution_clock::now();
+    auto heapStart = std::chrono::high_resolution_clock::now();
+    vector<Movie> sortedMoviesHeap = maxHeap.getSortedMovies();
+    auto heapEnd = std::chrono::high_resolution_clock::now();
 
+    auto heapDuration = std::chrono::duration_cast<std::chrono::milliseconds>(heapEnd - heapStart);
+    QString heapTimeText = QString("MaxHeap Time: %1 ms").arg(heapDuration.count());
+    ui->MaxHeapTimeLabel->setText(heapTimeText);
 
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-
-
-    QString timeText = QString("BST Time: %1 ms").arg(duration.count());
-    ui->BSTTimeLabel->setText(timeText);
-
-
-    for (const auto& movie : sortedMovies) {
+    // Display sorted movies (Using MaxHeap in this case)
+    for (const auto& movie : sortedMoviesHeap) {
         int row = ui->tableWidget->rowCount();
         ui->tableWidget->insertRow(row);
 
